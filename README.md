@@ -77,14 +77,14 @@ See the Go type definitions for the full schema.
 
 ### Quick-start examples
 
-# 1. Monitor DNS resolution
+#### 1. Monitor DNS resolution
 ```kubectl apply -f examples/dns.yaml```
 
-# 2. Deep health-check on a JSON endpoint
+#### 2. Deep health-check on a JSON endpoint
 ```kubectl apply -f examples/http-json.yaml```
 
 
-### Roadmap
+## Roadmap
 
 * 🔌 Additional notifiers: PagerDuty, OpsGenie, Webhook
 * 🗄️ Persistent metrics export (Prometheus CRD)
@@ -94,7 +94,7 @@ See the Go type definitions for the full schema.
 
 Feel free to open an Issue or Pull Request!
 
-### Contributing
+## Contributing
 1. Fork & clone the repo
 2. Create a feature branch
 3. Run make test and golangci-lint run
