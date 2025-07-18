@@ -57,3 +57,55 @@ spec:
       alertOn:                       # optional – defaults to ["failure"]
         - success
         - failure
+```
+
+Key fields in the spec (abridged):
+
+```
+driver – which probe implementation to use
+endpoint – URL/host/cluster depending on driver
+checkInterval – seconds between probes
+notify – list of one or more notifiers (Slack, e-mail)
+Driver-specific blocks – e.g. httpJsonCheck for http-json driver
+```
+
+See the Go type definitions for the full schema.
+
+## Installation (one-liner)
+
+```kubectl apply -f https://raw.githubusercontent.com/LiciousTech/endpoint-monitoring-operator/main/dist/install.yaml```
+
+### Quick-start examples
+
+# 1. Monitor DNS resolution
+```kubectl apply -f examples/dns.yaml```
+
+# 2. Deep health-check on a JSON endpoint
+```kubectl apply -f examples/http-json.yaml```
+
+
+### Roadmap
+
+* 🔌 Additional notifiers: PagerDuty, OpsGenie, Webhook
+* 🗄️ Persistent metrics export (Prometheus CRD)
+* 🕵🏻‍♂️ Synthetic transaction scripts (e.g., login + checkout)
+* 🔑 Secretless credentials via CSI Drivers
+* ➕ **New drivers:** Redis, MySQL, Kafka
+
+Feel free to open an Issue or Pull Request!
+
+### Contributing
+1. Fork & clone the repo
+2. Create a feature branch
+3. Run make test and golangci-lint run
+
+Submit a PR—all contributions welcome!
+See CONTRIBUTING.md for details.
+
+
+
+
+
+
+
+
