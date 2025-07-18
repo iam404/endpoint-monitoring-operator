@@ -1,0 +1,15 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: opensearch-cluster01-health
+  namespace: endpoint-monitoring-operator-system
+spec:
+  checkInterval: 60
+  driver: opensearch
+  endpoint: http://cluster01.os01.svc.cluster.local:9200
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: <slack-webhook-url>
+      alertOn:
+        - failure

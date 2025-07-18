@@ -1,0 +1,15 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: rds-mysql-tcp-check
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: tcp
+  endpoint: mysql-cluster-rds.aws.com:3306
+  checkInterval: 30
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - failure

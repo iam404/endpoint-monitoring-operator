@@ -1,0 +1,13 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: trino-coordinator-monitor
+  namespace: endpoint-monitoring-operator-system
+spec:
+  checkInterval: 300  # 5 minutes
+  driver: trino
+  endpoint: http://trino.company.com
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ # alertOn not specified , so by default only reports failures.

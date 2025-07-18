@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/status
+  verbs:
+  - get
+  - patch
+  - update

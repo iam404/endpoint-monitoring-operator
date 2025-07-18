@@ -1,0 +1,16 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: my-domain-monitor
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: dns
+  endpoint: your-domain.com
+  checkInterval: 10 # in seconds
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - success  # by default alerts only failures.
+        - failure 

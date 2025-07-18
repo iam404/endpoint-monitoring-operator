@@ -1,0 +1,15 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: ping-google
+  namespace: endpoint-monitoring-operator-system
+spec:
+  checkInterval: 60  # every 1 minute
+  driver: ping
+  endpoint: 8.8.8.8
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - failure

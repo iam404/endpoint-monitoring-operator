@@ -1,0 +1,23 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: user-service-healthcheck
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: http-json
+  endpoint: https://api.mycompany.com/v1/status
+  checkInterval: 60 # seconds
+  httpJsonCheck:
+    expectedStatusCode: 200 # optional
+    jsonAssertions:
+      status: "UP"
+      service: "user-service"
+      env: "prod"
+      dependencies.database: "ok"
+      dependencies.redis: "ok"
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - failure

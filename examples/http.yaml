@@ -1,0 +1,15 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: trino-basic-http-check
+  namespace: endpoint-monitoring-operator-system
+spec:
+  checkInterval: 60  # check every 1 minute
+  driver: http
+  endpoint: https://status.my-domain.com/
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - failure

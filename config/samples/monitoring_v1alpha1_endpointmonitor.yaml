@@ -1,0 +1,9 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  labels:
+    app.kubernetes.io/name: endpoint-monitoring-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: endpointmonitor-sample
+spec:
+  # TODO(user): Add fields here

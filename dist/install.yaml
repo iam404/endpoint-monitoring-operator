@@ -1,0 +1,445 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+    control-plane: controller-manager
+  name: endpoint-monitoring-operator-system
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.17.2
+  name: endpointmonitors.monitoring.licious.app
+spec:
+  group: monitoring.licious.app
+  names:
+    kind: EndpointMonitor
+    listKind: EndpointMonitorList
+    plural: endpointmonitors
+    singular: endpointmonitor
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: EndpointMonitorSpec defines the desired state of EndpointMonitor
+            properties:
+              checkInterval:
+                type: integer
+              driver:
+                type: string
+              endpoint:
+                type: string
+              httpJsonCheck:
+                description: HttpJsonCheck defines expected JSON field values from
+                  a HTTP response
+                properties:
+                  expectedStatusCode:
+                    type: integer
+                  jsonAssertions:
+                    additionalProperties:
+                      type: string
+                    type: object
+                required:
+                - jsonAssertions
+                type: object
+              notify:
+                description: NotifyConfig holds notifier configurations
+                properties:
+                  email:
+                    description: EmailConfig is placeholder (no-op for now)
+                    properties:
+                      emailProvider:
+                        type: string
+                      emailSecretRef:
+                        properties:
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      enabled:
+                        type: boolean
+                      from:
+                        type: string
+                      to:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - emailProvider
+                    - emailSecretRef
+                    - enabled
+                    - from
+                    - to
+                    type: object
+                  slack:
+                    description: SlackConfig defines Slack notifier config
+                    properties:
+                      alertOn:
+                        items:
+                          type: string
+                        type: array
+                      enabled:
+                        type: boolean
+                      webhookUrl:
+                        type: string
+                    required:
+                    - enabled
+                    - webhookUrl
+                    type: object
+                type: object
+            required:
+            - checkInterval
+            - driver
+            - endpoint
+            - notify
+            type: object
+          status:
+            description: EndpointMonitorStatus defines the observed state of EndpointMonitor
+            properties:
+              lastCheckedTime:
+                format: date-time
+                type: string
+              lastStatus:
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-controller-manager
+  namespace: endpoint-monitoring-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-leader-election-role
+  namespace: endpoint-monitoring-operator-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-endpointmonitor-admin-role
+rules:
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-endpointmonitor-editor-role
+rules:
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-endpointmonitor-viewer-role
+rules:
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/status
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: endpoint-monitoring-operator-manager-role
+rules:
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - monitoring.licious.app
+  resources:
+  - endpointmonitors/status
+  verbs:
+  - get
+  - patch
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: endpoint-monitoring-operator-metrics-auth-role
+rules:
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: endpoint-monitoring-operator-metrics-reader
+rules:
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-leader-election-rolebinding
+  namespace: endpoint-monitoring-operator-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: endpoint-monitoring-operator-leader-election-role
+subjects:
+- kind: ServiceAccount
+  name: endpoint-monitoring-operator-controller-manager
+  namespace: endpoint-monitoring-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+  name: endpoint-monitoring-operator-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: endpoint-monitoring-operator-manager-role
+subjects:
+- kind: ServiceAccount
+  name: endpoint-monitoring-operator-controller-manager
+  namespace: endpoint-monitoring-operator-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: endpoint-monitoring-operator-metrics-auth-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: endpoint-monitoring-operator-metrics-auth-role
+subjects:
+- kind: ServiceAccount
+  name: endpoint-monitoring-operator-controller-manager
+  namespace: endpoint-monitoring-operator-system
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+    control-plane: controller-manager
+  name: endpoint-monitoring-operator-controller-manager-metrics-service
+  namespace: endpoint-monitoring-operator-system
+spec:
+  ports:
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: 8443
+  selector:
+    app.kubernetes.io/name: endpoint-monitoring-operator
+    control-plane: controller-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/name: endpoint-monitoring-operator
+    control-plane: controller-manager
+  name: endpoint-monitoring-operator-controller-manager
+  namespace: endpoint-monitoring-operator-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: endpoint-monitoring-operator
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        app.kubernetes.io/name: endpoint-monitoring-operator
+        control-plane: controller-manager
+    spec:
+      containers:
+      - args:
+        - --metrics-bind-address=:8443
+        - --leader-elect
+        - --health-probe-bind-address=:8081
+        command:
+        - /manager
+        image: tarun4licious/endpoint-monitoring-operator:1.0.0
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8081
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        ports: []
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 8081
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 500m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts: []
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: endpoint-monitoring-operator-controller-manager
+      terminationGracePeriodSeconds: 10
+      volumes: []
