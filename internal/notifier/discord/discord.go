@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
@@ -26,7 +27,8 @@ func (d *DiscordNotifier) SendAlert(status string, msg string) error {
 		return nil // silently skip
 	}
 
-	payload := map[string]string{"content": msg}
+	styledMsg := d.formatDiscordMessage(status, msg)
+	payload := map[string]string{"content": styledMsg}
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
 		return fmt.Errorf("failed to marshal discord payload: %w", err)
@@ -46,15 +48,22 @@ func (d *DiscordNotifier) SendAlert(status string, msg string) error {
 }
 
 func (d *DiscordNotifier) shouldAlert(status string) bool {
-	if len(d.cfg.AlertOn) == 0 {
-		// Default to alert only on failure
-		return status == "failure"
+	return notifier.ShouldAlert(d.cfg.AlertOn, status)
+}
+
+func (d *DiscordNotifier) formatDiscordMessage(status, msg string) string {
+	var statusEmoji string
+	switch status {
+	case "success":
+		statusEmoji = ":white_check_mark:"
+	case "failure":
+		statusEmoji = ":x:"
+	default:
+		statusEmoji = ":information_source:"
 	}
 
-	for _, allowed := range d.cfg.AlertOn {
-		if allowed == status {
-			return true
-		}
-	}
-	return false
-} 
+	return fmt.Sprintf(
+		"%s **Endpoint Monitor Alert** %s\n\n**Status:** %s\n\n**Details:**\n```\n%s\n```",
+		statusEmoji, statusEmoji, strings.ToUpper(status), msg,
+	)
+}

@@ -1,0 +1,22 @@
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: discord-ping-example
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: ping
+  endpoint: a.b.c.d
+  checkInterval: 60
+  notify:
+    discord:
+      enabled: true
+      webhookUrl: https://discord.com/api/webhooks/XXX/YYY
+      alertOn:
+        - failure
+        - success
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXX/YYY/ZZZ
+      alertOn:
+        - failure
+        - success
