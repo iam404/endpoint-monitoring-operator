@@ -21,8 +21,9 @@ type EndpointMonitorSpec struct {
 
 // NotifyConfig holds notifier configurations
 type NotifyConfig struct {
-	Slack *SlackConfig `json:"slack,omitempty"`
-	Email *EmailConfig `json:"email,omitempty"`
+	Slack   *SlackConfig   `json:"slack,omitempty"`
+	Email   *EmailConfig   `json:"email,omitempty"`
+	Discord *DiscordConfig `json:"discord,omitempty"`
 }
 
 // SlackConfig defines Slack notifier config
@@ -43,6 +44,13 @@ type EmailConfig struct {
 
 type SecretRef struct {
 	Name string `json:"name"`
+}
+
+// DiscordConfig defines Discord notifier config
+type DiscordConfig struct {
+	Enabled    bool     `json:"enabled"`
+	WebhookURL string   `json:"webhookUrl"`
+	AlertOn    []string `json:"alertOn,omitempty"` // values: "success", "failure"
 }
 
 // EndpointMonitorStatus defines the observed state of EndpointMonitor

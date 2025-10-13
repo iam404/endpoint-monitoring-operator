@@ -46,15 +46,5 @@ func (s *SlackNotifier) SendAlert(status string, msg string) error {
 }
 
 func (s *SlackNotifier) shouldAlert(status string) bool {
-	if len(s.cfg.AlertOn) == 0 {
-		// Default to alert only on failure
-		return status == "failure"
-	}
-
-	for _, allowed := range s.cfg.AlertOn {
-		if allowed == status {
-			return true
-		}
-	}
-	return false
+	return notifier.ShouldAlert(s.cfg.AlertOn, status)
 }
