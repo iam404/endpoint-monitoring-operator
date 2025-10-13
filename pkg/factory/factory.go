@@ -8,6 +8,7 @@ import (
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/email"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/slack"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
 )
 
 // NotifierFactory creates notifiers based on configuration
@@ -41,6 +42,14 @@ func (f *NotifierFactory) CreateNotifier(config *v1alpha1.NotifyConfig) (notifie
 			return nil, fmt.Errorf("failed to create Email notifier: %w", err)
 		}
 		notifiers = append(notifiers, emailNotifier)
+	}
+
+	if config.Discord != nil && config.Discord.Enabled {
+		discordNotifier, err := discord.New(config.Discord)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Discord notifier: %w", err)
+		}
+		notifiers = append(notifiers, discordNotifier)
 	}
 
 	if len(notifiers) == 0 {

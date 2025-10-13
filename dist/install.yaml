@@ -68,6 +68,21 @@ spec:
               notify:
                 description: NotifyConfig holds notifier configurations
                 properties:
+                  discord:
+                    description: DiscordConfig defines Discord notifier config
+                    properties:
+                      alertOn:
+                        items:
+                          type: string
+                        type: array
+                      enabled:
+                        type: boolean
+                      webhookUrl:
+                        type: string
+                    required:
+                    - enabled
+                    - webhookUrl
+                    type: object
                   email:
                     description: EmailConfig is placeholder (no-op for now)
                     properties:
