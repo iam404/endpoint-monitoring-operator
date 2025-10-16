@@ -94,6 +94,8 @@ func (f *DriverFactory) CreateDriver(driverType string, endpoint string, monitor
 		return driver.NewHTTPDriver(endpoint)
 	case "http-json":
 		return driver.NewHTTPJSONDriver(endpoint, monitor.Spec.HttpJsonCheck)
+	case "smtp":
+		return driver.NewSMTPDriver(endpoint, monitor.Spec.SmtpCheck)
 	case "tcp":
 		return driver.NewTCPDriver(endpoint)
 	case "dns":
