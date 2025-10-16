@@ -1,12 +1,12 @@
 apiVersion: monitoring.licious.app/v1alpha1
 kind: EndpointMonitor
 metadata:
-  name: trino-basic-http-check
+  name: smtp-check
   namespace: endpoint-monitoring-operator-system
 spec:
-  checkInterval: 60  # check every 1 minute
-  driver: http
-  endpoint: https://status.example.com/
+  driver: tcp
+  endpoint: smtp.example.com
+  checkInterval: 30
   notify:
     slack:
       enabled: true

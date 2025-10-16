@@ -55,7 +55,7 @@ kubectl describe endpointmonitor domain-monitor -n endpoint-monitoring-operator-
 Let's say you have a User Service with an endpoint like:
 
 ```bash
-GET https://api.mycompany.com/v1/status
+GET https://api.example.com/v1/status
 ```
 
 And it responds with:
@@ -83,7 +83,7 @@ metadata:
   namespace: endpoint-monitoring-operator-system
 spec:
   driver: http-json
-  endpoint: https://api.mycompany.com/v1/status
+  endpoint: https://api.example.com/v1/status
   checkInterval: 30 # seconds
   httpJsonCheck:
     expectedStatusCode: 200 # optional
@@ -177,7 +177,7 @@ metadata:
 spec:
   checkInterval: 60  # check every 1 minute
   driver: http
-  endpoint: https://status.my-domain.com/
+  endpoint: https://status.example.com/
   notify:
     slack:
       enabled: true
@@ -200,6 +200,28 @@ spec:
   checkInterval: 60  # every 1 minute
   driver: ping
   endpoint: 8.8.8.8
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: <slack-webhook-url>
+      alertOn:
+        - failure
+```
+
+## 8. SMTP
+
+Use the smtp driver when you want to validate an email server is responding.
+
+```yaml
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: basic-smtp-check
+  namespace: endpoint-monitoring-operator-system
+spec:
+  checkInterval: 60  # check every 1 minute
+  driver: smtp
+  endpoint: smtp.example.com
   notify:
     slack:
       enabled: true

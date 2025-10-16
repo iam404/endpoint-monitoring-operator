@@ -10,6 +10,17 @@ type HttpJsonCheck struct {
 	JsonAssertions     map[string]string `json:"jsonAssertions"`               // key: JSONPath-like dot string, value: expected value
 }
 
+type SmtpCheck struct {
+	Helo            string `json:"helo,omitempty"`
+	Tls             bool   `json:"tls,omitempty"`
+	StartTls        bool   `json:"startTls,omitempty"`
+	Username        string `json:"username,omitempty"`
+	Password        string `json:"password,omitempty"`
+	VerifyAssertion string `json:"verifyAssertion,omitempty"`
+	FromAssertion   string `json:"fromAssertion,omitempty"`
+	ToAssertion     string `json:"toAssertion,omitempty"`
+}
+
 // EndpointMonitorSpec defines the desired state of EndpointMonitor
 type EndpointMonitorSpec struct {
 	Driver        string         `json:"driver"`        // ex: "opensearch", "trino", "http", "http-json"
@@ -17,6 +28,7 @@ type EndpointMonitorSpec struct {
 	CheckInterval int            `json:"checkInterval"` // in seconds
 	Notify        NotifyConfig   `json:"notify"`
 	HttpJsonCheck *HttpJsonCheck `json:"httpJsonCheck,omitempty"` // only relevant for driver = "http-json"
+	SmtpCheck     *SmtpCheck     `json:"smtpCheck,omitempty"`     // only relevant for driver = "smtp"
 }
 
 // NotifyConfig holds notifier configurations
