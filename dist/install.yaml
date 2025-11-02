@@ -72,7 +72,7 @@ spec:
                     type: string
                   tls:
                     type: boolean
-                  smartTls:
+                  startTls:
                     type: boolean
                   username:
                     type: string
