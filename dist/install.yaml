@@ -423,7 +423,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: tarun4licious/endpoint-monitoring-operator:1.0.0
+        image: licioustech/endpoint-monitoring-operator:1.0.1
         livenessProbe:
           httpGet:
             path: /healthz
