@@ -92,6 +92,10 @@ func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	if monitor.Status.LastStatus != status {
 		monitor.Status.LastStatus = status
 		updated = true
+		if err := notifier.SendAlert("change", alertMessage); err != nil {
+			logger.Error(err, "Failed to send alert")
+			return ctrl.Result{}, err
+		}
 	}
 	if monitor.Status.LastCheckedTime != nowMetaTime {
 		monitor.Status.LastCheckedTime = nowMetaTime
