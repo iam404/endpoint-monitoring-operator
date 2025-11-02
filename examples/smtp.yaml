@@ -4,7 +4,7 @@ metadata:
   name: smtp-check
   namespace: endpoint-monitoring-operator-system
 spec:
-  driver: tcp
+  driver: smtp
   endpoint: smtp.example.com
   checkInterval: 30
   notify:

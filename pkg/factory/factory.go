@@ -6,9 +6,9 @@ import (
 	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/driver"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/email"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/slack"
-	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
 )
 
 // NotifierFactory creates notifiers based on configuration

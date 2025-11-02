@@ -57,26 +57,6 @@ spec:
                 required:
                 - jsonAssertions
                 type: object
-              smtpCheck:
-                description: SmtpCheck defines variables for the smtp transaction
-                properties:
-                  helo:
-                    type: string
-                  tls:
-                    type: boolean
-                  smartTls:
-                    type: boolean
-                  username:
-                    type: string
-                  password:
-                    type: string
-                  verifyAssertion:
-                    type: string
-                  fromAssertion:
-                    type: string
-                  toAssertion:
-                    type: string
-                type: object
               notify:
                 description: NotifyConfig holds notifier configurations
                 properties:
