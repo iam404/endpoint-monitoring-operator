@@ -13,6 +13,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	monitorv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	notifierTypes "github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
 	"github.com/LiciousTech/endpoint-monitoring-operator/pkg/factory"
 )
 
@@ -71,26 +72,32 @@ func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{}, err
 	}
 
-	var alertMessage, status string
-	if result.Success {
-		status = "success"
-		alertMessage = fmt.Sprintf("%s monitor for %s is healthy\n%s",
-			driver.GetType(), driver.GetEndpoint(), result.Message)
-	} else {
-		status = "failure"
-		alertMessage = fmt.Sprintf("%s monitor for %s is unhealthy\n%s",
-			driver.GetType(), driver.GetEndpoint(), result.Message)
+	noticeValues := notifierTypes.NoticeValues{
+		// save values that can be overwritten by the Status().Update
+		LastStatus:       monitor.Status.LastStatus,
+		LastStatusChange: monitor.Status.LastStatusChange.Time.String(),
+		StatusTime:       now.Sub(monitor.Status.LastStatusChange.Time).Round(time.Second).String(),
+		Status:           "failure",
+		Healthy:          "unhealthy",
+		Endpoint:         driver.GetEndpoint(),
+		Driver:           driver.GetType(),
+		Name:             monitor.Name,
+		Message:          result.Message,
+		Response:         result.ResponseTime.String(),
+		CurrentTime:      now.String(),
+		Namespace:        req.Namespace,
+		AlertMessage:     "",
 	}
-
-	if err := notifier.SendAlert(status, alertMessage); err != nil {
-		logger.Error(err, "Failed to send alert")
-		return ctrl.Result{}, err
+	if result.Success {
+		noticeValues.Status = "success"
+		noticeValues.Healthy = "healthy"
 	}
 
 	updated := false
 	nowMetaTime := metav1.NewTime(now)
-	if monitor.Status.LastStatus != status {
-		monitor.Status.LastStatus = status
+	if monitor.Status.LastStatus != noticeValues.Status {
+		monitor.Status.LastStatus = noticeValues.Status
+		monitor.Status.LastStatusChange = nowMetaTime
 		updated = true
 	}
 	if monitor.Status.LastCheckedTime != nowMetaTime {
@@ -98,6 +105,9 @@ func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		updated = true
 	}
 
+	// Save updates to resource beofre sending notification, incase of notification failure
+	// also fix out of order updates if the notification takes longer than the next check interval
+	// and the next update saves before this cone
 	if updated {
 		if err := r.Status().Update(ctx, &monitor); err != nil {
 			logger.Error(err, "Failed to update EndpointMonitor status")
@@ -105,10 +115,25 @@ func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 	}
 
+	// calculate notice values that are not time sensitive
+	noticeValues.AlertMessage = fmt.Sprintf("%s monitor for %s is %s\n%s", noticeValues.Driver, noticeValues.Endpoint, noticeValues.Healthy, noticeValues.Message)
+
+	if err := notifier.SendAlert(noticeValues.Status, &noticeValues, r.Client); err != nil {
+		logger.Error(err, "Failed to send alert")
+		return ctrl.Result{}, err
+	}
+
+	if noticeValues.LastStatus != noticeValues.Status {
+		if err := notifier.SendAlert("change", &noticeValues, r.Client); err != nil {
+			logger.Error(err, "Failed to send alert")
+			return ctrl.Result{}, err
+		}
+	}
+
 	logger.Info("Reconciliation complete",
 		"name", monitor.Name,
-		"status", status,
-		"responseTime", result.ResponseTime.String())
+		"status", noticeValues.Status,
+		"responseTime", noticeValues.Response)
 
 	return ctrl.Result{RequeueAfter: checkInterval}, nil
 }
