@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
 )
 
 type alertPayload struct {
@@ -31,19 +32,21 @@ func TestDiscordNotifier_SendAlert(t *testing.T) {
 	}}
 
 	t.Run("should send alert on failure", func(t *testing.T) {
-		err := n.SendAlert("failure", "test message")
+		values := notifier.NoticeValues{Status: "failure", AlertMessage: "test message"}
+		err := n.SendAlert("failure", &values, nil)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 		// Update: Expect the styled message format
-		expected := n.formatDiscordMessage("failure", "test message")
+		expected := n.formatDiscordMessage("failure", &values)
 		if receivedPayload.Content != expected {
 			t.Errorf("expected message '%s', got '%s'", expected, receivedPayload.Content)
 		}
 	})
 
 	t.Run("should not send alert on success if not configured", func(t *testing.T) {
-		err := n.SendAlert("success", "should not send")
+		values := notifier.NoticeValues{Status: "success", AlertMessage: "should not send"}
+		err := n.SendAlert("success", &values, nil)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -75,21 +78,24 @@ func TestDiscordNotifier_formatDiscordMessage(t *testing.T) {
 	n := &DiscordNotifier{cfg: &v1alpha1.DiscordConfig{}}
 
 	t.Run("failure status", func(t *testing.T) {
-		msg := n.formatDiscordMessage("failure", "something went wrong")
+		values := notifier.NoticeValues{Status: "failure", AlertMessage: "something went wrong"}
+		msg := n.formatDiscordMessage("failure", &values)
 		if want := ":x: **Endpoint Monitor Alert** :x:\n\n**Status:** FAILURE\n\n**Details:**\n```\nsomething went wrong\n```"; msg != want {
 			t.Errorf("unexpected format for failure: got %q, want %q", msg, want)
 		}
 	})
 
 	t.Run("success status", func(t *testing.T) {
-		msg := n.formatDiscordMessage("success", "all good")
+		values := notifier.NoticeValues{Status: "success", AlertMessage: "all good"}
+		msg := n.formatDiscordMessage("success", &values)
 		if want := ":white_check_mark: **Endpoint Monitor Alert** :white_check_mark:\n\n**Status:** SUCCESS\n\n**Details:**\n```\nall good\n```"; msg != want {
 			t.Errorf("unexpected format for success: got %q, want %q", msg, want)
 		}
 	})
 
 	t.Run("other status", func(t *testing.T) {
-		msg := n.formatDiscordMessage("info", "misc info")
+		values := notifier.NoticeValues{Status: "info", AlertMessage: "misc info"}
+		msg := n.formatDiscordMessage("info", &values)
 		if want := ":information_source: **Endpoint Monitor Alert** :information_source:\n\n**Status:** INFO\n\n**Details:**\n```\nmisc info\n```"; msg != want {
 			t.Errorf("unexpected format for info: got %q, want %q", msg, want)
 		}
