@@ -6,9 +6,11 @@ import (
 	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/driver"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/email"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/slack"
-	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NotifierFactory creates notifiers based on configuration
@@ -52,6 +54,14 @@ func (f *NotifierFactory) CreateNotifier(config *v1alpha1.NotifyConfig) (notifie
 		notifiers = append(notifiers, discordNotifier)
 	}
 
+	if config.Webhook != nil && config.Webhook.Enabled {
+		webhookNotifier, err := webhook.New(config.Webhook)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Webhook notifier: %w", err)
+		}
+		notifiers = append(notifiers, webhookNotifier)
+	}
+
 	if len(notifiers) == 0 {
 		return nil, fmt.Errorf("no notifiers enabled")
 	}
@@ -65,10 +75,10 @@ type CompositeNotifier struct {
 }
 
 // SendAlert sends alerts to all configured notifiers
-func (c *CompositeNotifier) SendAlert(status string, msg string) error {
+func (c *CompositeNotifier) SendAlert(status string, values *notifier.NoticeValues, client client.Client) error {
 	var errs []error
 	for _, n := range c.notifiers {
-		if err := n.SendAlert(status, msg); err != nil {
+		if err := n.SendAlert(status, values, client); err != nil {
 			errs = append(errs, err)
 		}
 	}

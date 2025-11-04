@@ -24,22 +24,37 @@ type NotifyConfig struct {
 	Slack   *SlackConfig   `json:"slack,omitempty"`
 	Email   *EmailConfig   `json:"email,omitempty"`
 	Discord *DiscordConfig `json:"discord,omitempty"`
+	Webhook *WebhookConfig `json:"webhook,omitempty"`
+}
+
+// WebhookConfig defines Webhook notifier config
+type WebhookConfig struct {
+	Enabled       bool      `json:"enabled"`
+	WebhookURL    string    `json:"webhookUrl"`
+	Authorization SecretRef `json:"authorization,omitempty"` // Bearer or other token needed
+	ContentType   string    `json:"contentType,omitempty"`   // "application/json", "application/x-www-form-urlencoded", ...
+	Contents      string    `json:"contents,omitempty"`      // template, if empty will use GET instead of POST
+	AlertOn       []string  `json:"alertOn,omitempty"`       // values: "success", "failure", "change"
 }
 
 // SlackConfig defines Slack notifier config
 type SlackConfig struct {
 	Enabled    bool     `json:"enabled"`
 	WebhookURL string   `json:"webhookUrl"`
-	AlertOn    []string `json:"alertOn,omitempty"` // values: "success", "failure"
+	AlertOn    []string `json:"alertOn,omitempty"` // values: "success", "failure", "change"
 }
 
 // EmailConfig is placeholder (no-op for now)
 type EmailConfig struct {
 	Enabled        bool      `json:"enabled"`
-	From           string    `json:"from"`
+	From           string    `json:"from,omitempty"`
 	To             []string  `json:"to"`
-	EmailProvider  string    `json:"emailProvider"` // e.g., "ses"
-	EmailSecretRef SecretRef `json:"emailSecretRef"`
+	EmailProvider  string    `json:"emailProvider,omitempty"` // e.g., "ses", "smtp"
+	EmailSecretRef SecretRef `json:"emailSecretRef,omitempty"`
+	Host           string    `json:"host,omitempty"`    // Host:Port
+	Subject        string    `json:"subject,omitempty"` // subject template
+	Body           string    `json:"body,omitempty"`    // message body template
+	AlertOn        []string  `json:"alertOn,omitempty"` // values: "success", "failure"
 }
 
 type SecretRef struct {
@@ -55,8 +70,9 @@ type DiscordConfig struct {
 
 // EndpointMonitorStatus defines the observed state of EndpointMonitor
 type EndpointMonitorStatus struct {
-	LastCheckedTime metav1.Time `json:"lastCheckedTime,omitempty"`
-	LastStatus      string      `json:"lastStatus,omitempty"` // e.g., success/failure
+	LastCheckedTime  metav1.Time `json:"lastCheckedTime,omitempty"`
+	LastStatus       string      `json:"lastStatus,omitempty"` // e.g., success/failure
+	LastStatusChange metav1.Time `json:"lastStatusChange,omitempty"`
 }
 
 //+kubebuilder:object:root=true
