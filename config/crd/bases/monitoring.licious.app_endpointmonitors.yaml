@@ -120,19 +120,22 @@ spec:
                 type: object
               smtpCheck:
                 properties:
+                  emailSecretRef:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
                   fromAssertion:
                     type: string
                   helo:
-                    type: string
-                  password:
                     type: string
                   startTls:
                     type: boolean
                   tls:
                     type: boolean
                   toAssertion:
-                    type: string
-                  username:
                     type: string
                   verifyAssertion:
                     type: string

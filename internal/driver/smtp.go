@@ -8,6 +8,9 @@ import (
 	"time"
 
 	v1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/common/smtpAuth"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type SMTPDriver struct {
@@ -16,14 +19,33 @@ type SMTPDriver struct {
 	check    *v1.SmtpCheck
 }
 
-func NewSMTPDriver(endpoint string, check *v1.SmtpCheck) (Driver, error) {
+func NewSMTPDriver(endpoint string, check *v1.SmtpCheck, namespace string, client client.Client) (Driver, error) {
 	if endpoint == "" {
 		return nil, fmt.Errorf("endpoint cannot be empty")
 	}
 
 	var auth smtp.Auth = nil
-	if check != nil && len(check.Username) > 0 && len(check.Password) > 0 {
-		auth = smtp.PlainAuth("", check.Username, check.Password, endpoint)
+	if check.EmailSecretRef.Name != "" {
+		secret, err := notifier.GetSecret(check.EmailSecretRef.Name, namespace, client)
+		if err != nil {
+			return nil, fmt.Errorf("unable to read secret: %s", err)
+		}
+
+		var identity, username, password string
+		identity = ""
+		if identitySecret, ok := secret.Data["identity"]; ok {
+			identity = string(identitySecret)
+		}
+		if usernameSecret, ok := secret.Data["username"]; ok {
+			username = string(usernameSecret)
+		}
+		if passwordSecret, ok := secret.Data["password"]; ok {
+			password = string(passwordSecret)
+		}
+		hostPart, _, _ := net.SplitHostPort(endpoint)
+		if username != "" && password != "" {
+			auth = smtpAuth.CommonAuth(identity, username, password, hostPart)
+		}
 	}
 	return &SMTPDriver{
 		endpoint: endpoint,
@@ -38,8 +60,9 @@ func (t *SMTPDriver) Check() (*CheckResult, error) {
 	var conn net.Conn
 	var sconn *smtp.Client
 	var err error
+	hostPart, _, _ := net.SplitHostPort(t.endpoint)
 	if t.check.Tls {
-		tlsConfig := &tls.Config{ServerName: t.endpoint}
+		tlsConfig := &tls.Config{ServerName: hostPart}
 		dialer := &net.Dialer{Timeout: 10 * time.Second}
 		conn, err = tls.DialWithDialer(dialer, "tcp", t.endpoint, tlsConfig)
 	} else {
@@ -49,28 +72,31 @@ func (t *SMTPDriver) Check() (*CheckResult, error) {
 	if err == nil {
 		sconn, err = smtp.NewClient(conn, t.endpoint)
 	}
-	if err == nil && t.check != nil && len(t.check.Helo) > 0 {
+	if err == nil && t.check.Helo != "" {
 		err = sconn.Hello(t.check.Helo)
 	}
-	if err == nil && t.check != nil && t.check.StartTls && !t.check.Tls {
-		tlsConfig := &tls.Config{ServerName: t.endpoint}
+	if err == nil && t.check.StartTls && !t.check.Tls {
+		tlsConfig := &tls.Config{ServerName: hostPart}
 		err = sconn.StartTLS(tlsConfig)
 	}
 	if err == nil && t.auth != nil {
 		err = sconn.Auth(t.auth)
 	}
-	if err == nil && t.check != nil && len(t.check.VerifyAssertion) > 0 {
+	if err == nil && t.check.VerifyAssertion != "" {
 		err = sconn.Verify(t.check.VerifyAssertion)
 	}
-	if err == nil && t.check != nil && len(t.check.FromAssertion) > 0 {
+	if err == nil && t.check.FromAssertion != "" {
 		err = sconn.Mail(t.check.FromAssertion)
 	}
-	if err == nil && t.check != nil && len(t.check.ToAssertion) > 0 {
+	if err == nil && t.check.ToAssertion != "" {
 		err = sconn.Rcpt(t.check.ToAssertion)
 	}
-	if err == nil {
-		sconn.Quit()
-		sconn.Close()
+	if sconn != nil {
+		defer sconn.Quit()
+		defer sconn.Close()
+	}
+	if conn != nil {
+		defer conn.Close()
 	}
 
 	duration := time.Since(start)
@@ -85,8 +111,6 @@ func (t *SMTPDriver) Check() (*CheckResult, error) {
 		result.Message = fmt.Sprintf("SMTP check failed: %v", err)
 		return result, nil
 	}
-
-	defer conn.Close()
 
 	result.Success = true
 	result.Message = fmt.Sprintf("SMTP check successful (response time: %v)", duration)

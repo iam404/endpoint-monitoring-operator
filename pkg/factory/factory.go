@@ -82,20 +82,20 @@ func (c *CompositeNotifier) SendAlert(status string, msg string) error {
 type DriverFactory struct{}
 
 // NewDriver creates a driver instance based on the driver type
-func NewDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor) (driver.Driver, error) {
+func NewDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor, namespace string, client client.Client) (driver.Driver, error) {
 	factory := &DriverFactory{}
-	return factory.CreateDriver(driverType, endpoint, monitor)
+	return factory.CreateDriver(driverType, endpoint, monitor, namespace, client)
 }
 
 // CreateDriver implements the factory pattern for drivers
-func (f *DriverFactory) CreateDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor) (driver.Driver, error) {
+func (f *DriverFactory) CreateDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor, namespace string, client client.Client) (driver.Driver, error) {
 	switch driverType {
 	case "http":
 		return driver.NewHTTPDriver(endpoint)
 	case "http-json":
 		return driver.NewHTTPJSONDriver(endpoint, monitor.Spec.HttpJsonCheck)
 	case "smtp":
-		return driver.NewSMTPDriver(endpoint, monitor.Spec.SmtpCheck)
+		return driver.NewSMTPDriver(endpoint, monitor.Spec.SmtpCheck, namespace, client)
 	case "tcp":
 		return driver.NewTCPDriver(endpoint)
 	case "dns":
