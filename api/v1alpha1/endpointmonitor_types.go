@@ -11,14 +11,13 @@ type HttpJsonCheck struct {
 }
 
 type SmtpCheck struct {
-	Helo            string `json:"helo,omitempty"`
-	Tls             bool   `json:"tls,omitempty"`
-	StartTls        bool   `json:"startTls,omitempty"`
-	Username        string `json:"username,omitempty"`
-	Password        string `json:"password,omitempty"`
-	VerifyAssertion string `json:"verifyAssertion,omitempty"`
-	FromAssertion   string `json:"fromAssertion,omitempty"`
-	ToAssertion     string `json:"toAssertion,omitempty"`
+	Helo            string    `json:"helo,omitempty"`
+	Tls             bool      `json:"tls,omitempty"`
+	StartTls        bool      `json:"startTls,omitempty"`
+	EmailSecretRef  SecretRef `json:"emailSecretRef,omitempty"`
+	VerifyAssertion string    `json:"verifyAssertion,omitempty"`
+	FromAssertion   string    `json:"fromAssertion,omitempty"`
+	ToAssertion     string    `json:"toAssertion,omitempty"`
 }
 
 // EndpointMonitorSpec defines the desired state of EndpointMonitor

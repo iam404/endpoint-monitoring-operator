@@ -53,7 +53,7 @@ func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	driver, err := factory.NewDriver(monitor.Spec.Driver, monitor.Spec.Endpoint, &monitor)
+	driver, err := factory.NewDriver(monitor.Spec.Driver, monitor.Spec.Endpoint, &monitor, req.Namespace, r.Client)
 	if err != nil {
 		logger.Error(err, "Failed to create driver")
 		return ctrl.Result{}, err
