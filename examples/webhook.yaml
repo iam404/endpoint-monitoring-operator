@@ -8,8 +8,11 @@ spec:
   driver: http
   endpoint: https://status.example.com/
   notify:
-    slack:
+    webhook:
       enabled: true
       webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      contentType: "application/json"
+      contents: |-
+        {"text": "{{if eq .Status "success"}}:white_check_mark:{{else}}{{if eq .Status "failure"}}:x:{{else}}:information_source:{{end}}{{end}} {{.Driver}} monitor for {{.Endpoint}} is {{.Healthy}}, previously was {{.LastStatus}} for {{.StatusTime}}"}
       alertOn:
-        - failure
+        - change

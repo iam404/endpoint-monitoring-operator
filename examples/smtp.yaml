@@ -1,0 +1,39 @@
+---
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: smtp-check
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: smtp
+  endpoint: smtp.example.com:25
+  helo: smtp.example.com
+  smartTls: true
+  checkInterval: 60
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - change
+---
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: smtp-check
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: smtp
+  endpoint: smtp.example.com:465
+  helo: smtp.example.com
+  tls: true
+  checkInterval: 60
+  notify:
+    slack:
+      enabled: true
+      webhookUrl: https://hooks.slack.com/services/XXXXXXXXX/YYYYYYYYY/ZZZZZZZZZZZZ
+      alertOn:
+        - change
+        - failure
+# Will alert on every failure, and only the first success
+---

@@ -78,6 +78,12 @@ spec:
                   email:
                     description: EmailConfig is placeholder (no-op for now)
                     properties:
+                      alertOn:
+                        items:
+                          type: string
+                        type: array
+                      body:
+                        type: string
                       emailProvider:
                         type: string
                       emailSecretRef:
@@ -91,15 +97,16 @@ spec:
                         type: boolean
                       from:
                         type: string
+                      host:
+                        type: string
+                      subject:
+                        type: string
                       to:
                         items:
                           type: string
                         type: array
                     required:
-                    - emailProvider
-                    - emailSecretRef
                     - enabled
-                    - from
                     - to
                     type: object
                   slack:
@@ -117,6 +124,54 @@ spec:
                     - enabled
                     - webhookUrl
                     type: object
+                  webhook:
+                    description: WebhookConfig defines Webhook notifier config
+                    properties:
+                      alertOn:
+                        items:
+                          type: string
+                        type: array
+                      authorization:
+                        properties:
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      contentType:
+                        type: string
+                      contents:
+                        type: string
+                      enabled:
+                        type: boolean
+                      webhookUrl:
+                        type: string
+                    required:
+                    - enabled
+                    - webhookUrl
+                    type: object
+                type: object
+              smtpCheck:
+                properties:
+                  emailSecretRef:
+                    properties:
+                      name:
+                        type: string
+                    required:
+                    - name
+                    type: object
+                  fromAssertion:
+                    type: string
+                  helo:
+                    type: string
+                  startTls:
+                    type: boolean
+                  tls:
+                    type: boolean
+                  toAssertion:
+                    type: string
+                  verifyAssertion:
+                    type: string
                 type: object
             required:
             - checkInterval
@@ -131,6 +186,9 @@ spec:
                 format: date-time
                 type: string
               lastStatus:
+                type: string
+              lastStatusChange:
+                format: date-time
                 type: string
             type: object
         type: object

@@ -6,9 +6,11 @@ import (
 	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/driver"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/email"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/slack"
-	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/discord"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // NotifierFactory creates notifiers based on configuration
@@ -52,6 +54,14 @@ func (f *NotifierFactory) CreateNotifier(config *v1alpha1.NotifyConfig) (notifie
 		notifiers = append(notifiers, discordNotifier)
 	}
 
+	if config.Webhook != nil && config.Webhook.Enabled {
+		webhookNotifier, err := webhook.New(config.Webhook)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create Webhook notifier: %w", err)
+		}
+		notifiers = append(notifiers, webhookNotifier)
+	}
+
 	if len(notifiers) == 0 {
 		return nil, fmt.Errorf("no notifiers enabled")
 	}
@@ -65,10 +75,10 @@ type CompositeNotifier struct {
 }
 
 // SendAlert sends alerts to all configured notifiers
-func (c *CompositeNotifier) SendAlert(status string, msg string) error {
+func (c *CompositeNotifier) SendAlert(status string, values *notifier.NoticeValues, client client.Client) error {
 	var errs []error
 	for _, n := range c.notifiers {
-		if err := n.SendAlert(status, msg); err != nil {
+		if err := n.SendAlert(status, values, client); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -82,18 +92,20 @@ func (c *CompositeNotifier) SendAlert(status string, msg string) error {
 type DriverFactory struct{}
 
 // NewDriver creates a driver instance based on the driver type
-func NewDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor) (driver.Driver, error) {
+func NewDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor, namespace string, client client.Client) (driver.Driver, error) {
 	factory := &DriverFactory{}
-	return factory.CreateDriver(driverType, endpoint, monitor)
+	return factory.CreateDriver(driverType, endpoint, monitor, namespace, client)
 }
 
 // CreateDriver implements the factory pattern for drivers
-func (f *DriverFactory) CreateDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor) (driver.Driver, error) {
+func (f *DriverFactory) CreateDriver(driverType string, endpoint string, monitor *v1alpha1.EndpointMonitor, namespace string, client client.Client) (driver.Driver, error) {
 	switch driverType {
 	case "http":
 		return driver.NewHTTPDriver(endpoint)
 	case "http-json":
 		return driver.NewHTTPJSONDriver(endpoint, monitor.Spec.HttpJsonCheck)
+	case "smtp":
+		return driver.NewSMTPDriver(endpoint, monitor.Spec.SmtpCheck, namespace, client)
 	case "tcp":
 		return driver.NewTCPDriver(endpoint)
 	case "dns":

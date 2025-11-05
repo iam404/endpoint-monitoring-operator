@@ -5,7 +5,7 @@ metadata:
   namespace: endpoint-monitoring-operator-system
 spec:
   driver: http-json
-  endpoint: https://api.mycompany.com/v1/status
+  endpoint: https://api.example.com/v1/status
   checkInterval: 60 # seconds
   httpJsonCheck:
     expectedStatusCode: 200 # optional
