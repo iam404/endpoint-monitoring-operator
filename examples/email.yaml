@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: smtp-notifications
+  namespace: endpoint-monitoring-operator-system
+type: Opaque
+stringData:
+  username: alerts@example.com
+  password: xxxxxxxx
+  from: alerts@example.com
+  host: mail.example.com:587
+# from and host are optional but will override the EndpointMonitor values if defined
+---
+apiVersion: monitoring.licious.app/v1alpha1
+kind: EndpointMonitor
+metadata:
+  name: rds-mysql-tcp-check
+  namespace: endpoint-monitoring-operator-system
+spec:
+  driver: tcp
+  endpoint: mysql-cluster-rds.example.com:3306
+  checkInterval: 30
+  notify:
+    email:
+      enabled: true
+      to:
+        - alerts@example.com
+      emailProvider: smtp
+      emailSecretRef:
+        name: smtp-notifications
+      subject: |-
+        {{if eq .Status "success"}}✅{{else}}{{if eq .Status "failure"}}❌{{else}}ℹ️{{end}}{{end}} {{.Driver}} {{.Endpoint}} changed status to {{.Status}}
+      body: |-
+        {{.Name}} {{.Driver}} monitoring {{.Endpoint}} changed status to {{.Status}}, {{.Healthy}}
+        from {{.LastStatus}} since {{.LastStatusChange}} after {{.StatusTime}}
+        test took {{.Response}}
+        
+        {{.AlertMessage}}
+        {{.Message}}
+      alertOn:
+        - change

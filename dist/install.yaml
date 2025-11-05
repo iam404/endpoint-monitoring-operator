@@ -106,6 +106,12 @@ spec:
                   email:
                     description: EmailConfig is placeholder (no-op for now)
                     properties:
+                      alertOn:
+                        items:
+                          type: string
+                        type: array
+                      body:
+                        type: string
                       emailProvider:
                         type: string
                       emailSecretRef:
@@ -119,15 +125,16 @@ spec:
                         type: boolean
                       from:
                         type: string
+                      host:
+                        type: string
+                      subject:
+                        type: string
                       to:
                         items:
                           type: string
                         type: array
                     required:
-                    - emailProvider
-                    - emailSecretRef
                     - enabled
-                    - from
                     - to
                     type: object
                   slack:
@@ -137,6 +144,32 @@ spec:
                         items:
                           type: string
                         type: array
+                      enabled:
+                        type: boolean
+                      webhookUrl:
+                        type: string
+                    required:
+                    - enabled
+                    - webhookUrl
+                    type: object
+                  webhook:
+                    description: WebhookConfig defines Webhook notifier config
+                    properties:
+                      alertOn:
+                        items:
+                          type: string
+                        type: array
+                      authorization:
+                        properties:
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      contentType:
+                        type: string
+                      contents:
+                        type: string
                       enabled:
                         type: boolean
                       webhookUrl:
@@ -159,6 +192,9 @@ spec:
                 format: date-time
                 type: string
               lastStatus:
+                type: string
+              lastStatusChange:
+                format: date-time
                 type: string
             type: object
         type: object
@@ -319,6 +355,14 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -443,7 +487,7 @@ spec:
         - --health-probe-bind-address=:8081
         command:
         - /manager
-        image: licioustech/endpoint-monitoring-operator:1.0.1
+        image: controller:latest
         livenessProbe:
           httpGet:
             path: /healthz
