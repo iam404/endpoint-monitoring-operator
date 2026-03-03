@@ -39,6 +39,8 @@ import (
 
 	monitoringv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/controller"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/scheduler"
+	"github.com/LiciousTech/endpoint-monitoring-operator/pkg/factory"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -202,9 +204,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	probeScheduler := scheduler.New(
+		scheduler.Config{Workers: 20},
+		&factory.DriverFactory{},
+		&factory.NotifierFactory{},
+		scheduler.NewEndpointMonitorStatusWriter(mgr.GetClient()),
+	)
+	if err := mgr.Add(probeScheduler); err != nil {
+		setupLog.Error(err, "unable to add probe scheduler")
+		os.Exit(1)
+	}
+
 	if err = (&controller.EndpointMonitorReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Scheduler: probeScheduler,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "EndpointMonitor")
 		os.Exit(1)

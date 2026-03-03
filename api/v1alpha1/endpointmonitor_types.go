@@ -55,8 +55,11 @@ type DiscordConfig struct {
 
 // EndpointMonitorStatus defines the observed state of EndpointMonitor
 type EndpointMonitorStatus struct {
-	LastCheckedTime metav1.Time `json:"lastCheckedTime,omitempty"`
-	LastStatus      string      `json:"lastStatus,omitempty"` // e.g., success/failure
+	LastCheckedTime   metav1.Time `json:"lastCheckedTime,omitempty"`
+	LastStatus        string      `json:"lastStatus,omitempty"` // e.g., success/failure
+	LastLatencyMillis int64       `json:"lastLatencyMillis,omitempty"`
+	LastStatusCode    int         `json:"lastStatusCode,omitempty"`
+	LastErrorMessage  string      `json:"lastErrorMessage,omitempty"`
 }
 
 //+kubebuilder:object:root=true
