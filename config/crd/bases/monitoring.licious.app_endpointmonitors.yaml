@@ -130,8 +130,15 @@ spec:
               lastCheckedTime:
                 format: date-time
                 type: string
+              lastErrorMessage:
+                type: string
+              lastLatencyMillis:
+                format: int64
+                type: integer
               lastStatus:
                 type: string
+              lastStatusCode:
+                type: integer
             type: object
         type: object
     served: true

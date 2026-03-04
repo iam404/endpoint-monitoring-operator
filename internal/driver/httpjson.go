@@ -41,15 +41,18 @@ func (h *HTTPJSONDriver) Check() (*CheckResult, error) {
 	if err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = fmt.Sprintf("HTTP-JSON request failed: %v", err)
 		return result, nil
 	}
 	defer resp.Body.Close()
+	result.StatusCode = resp.StatusCode
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = "failed to read HTTP response body"
 		return result, nil
 	}
@@ -58,6 +61,7 @@ func (h *HTTPJSONDriver) Check() (*CheckResult, error) {
 	if err := json.Unmarshal(body, &payload); err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = "invalid JSON response"
 		return result, nil
 	}

@@ -39,6 +39,8 @@ import (
 
 	monitoringv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 	"github.com/LiciousTech/endpoint-monitoring-operator/internal/controller"
+	"github.com/LiciousTech/endpoint-monitoring-operator/internal/scheduler"
+	"github.com/LiciousTech/endpoint-monitoring-operator/pkg/factory"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -63,6 +65,7 @@ func main() {
 	var probeAddr string
 	var secureMetrics bool
 	var enableHTTP2 bool
+	var probeWorkers int
 	var tlsOpts []func(*tls.Config)
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
@@ -81,6 +84,7 @@ func main() {
 	flag.StringVar(&metricsCertKey, "metrics-cert-key", "tls.key", "The name of the metrics server key file.")
 	flag.BoolVar(&enableHTTP2, "enable-http2", false,
 		"If set, HTTP/2 will be enabled for the metrics and webhook servers")
+	flag.IntVar(&probeWorkers, "probe-workers", 20, "Number of concurrent probe workers")
 	opts := zap.Options{
 		Development: true,
 	}
@@ -202,9 +206,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	probeScheduler := scheduler.New(
+		scheduler.Config{Workers: probeWorkers},
+		&factory.DriverFactory{},
+		&factory.NotifierFactory{},
+		scheduler.NewEndpointMonitorStatusWriter(mgr.GetClient()),
+	)
+	if err := mgr.Add(probeScheduler); err != nil {
+		setupLog.Error(err, "unable to add probe scheduler")
+		os.Exit(1)
+	}
+
 	if err = (&controller.EndpointMonitorReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:    mgr.GetClient(),
+		Scheme:    mgr.GetScheme(),
+		Scheduler: probeScheduler,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "EndpointMonitor")
 		os.Exit(1)

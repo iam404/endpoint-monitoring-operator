@@ -30,6 +30,13 @@ import (
 	Endpointmonitoringv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
 )
 
+type fakeScheduler struct{}
+
+func (f *fakeScheduler) Upsert(types.NamespacedName, Endpointmonitoringv1alpha1.EndpointMonitorSpec) {
+}
+func (f *fakeScheduler) Delete(types.NamespacedName) {}
+func (f *fakeScheduler) Start(context.Context) error { return nil }
+
 var _ = Describe("EndpointMonitor Controller", func() {
 	Context("When reconciling a resource", func() {
 		const resourceName = "test-resource"
@@ -51,14 +58,17 @@ var _ = Describe("EndpointMonitor Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
-					// TODO(user): Specify other spec details if needed.
+					Spec: Endpointmonitoringv1alpha1.EndpointMonitorSpec{
+						Driver:        "http",
+						Endpoint:      "https://example.com",
+						CheckInterval: 30,
+					},
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
 			}
 		})
 
 		AfterEach(func() {
-			// TODO(user): Cleanup logic after each test, like removing the resource instance.
 			resource := &Endpointmonitoringv1alpha1.EndpointMonitor{}
 			err := k8sClient.Get(ctx, typeNamespacedName, resource)
 			Expect(err).NotTo(HaveOccurred())
@@ -69,16 +79,15 @@ var _ = Describe("EndpointMonitor Controller", func() {
 		It("should successfully reconcile the resource", func() {
 			By("Reconciling the created resource")
 			controllerReconciler := &EndpointMonitorReconciler{
-				Client: k8sClient,
-				Scheme: k8sClient.Scheme(),
+				Client:    k8sClient,
+				Scheme:    k8sClient.Scheme(),
+				Scheduler: &fakeScheduler{},
 			}
 
 			_, err := controllerReconciler.Reconcile(ctx, reconcile.Request{
 				NamespacedName: typeNamespacedName,
 			})
 			Expect(err).NotTo(HaveOccurred())
-			// TODO(user): Add more specific assertions depending on your controller's reconciliation logic.
-			// Example: If you expect a certain status condition after reconciliation, verify it here.
 		})
 	})
 })

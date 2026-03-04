@@ -61,11 +61,13 @@ func (o *OpenSearchDriver) Check() (*CheckResult, error) {
 	if err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = fmt.Sprintf("OpenSearch check failed: %v", err)
 		return result, nil
 	}
 
 	defer resp.Body.Close()
+	result.StatusCode = resp.StatusCode
 
 	if resp.StatusCode != 200 {
 		result.Success = false
@@ -77,6 +79,7 @@ func (o *OpenSearchDriver) Check() (*CheckResult, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = fmt.Sprintf("OpenSearch check failed to parse response: %v", err)
 		return result, nil
 	}
