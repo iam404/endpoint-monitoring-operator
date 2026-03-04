@@ -55,11 +55,13 @@ func (t *TrinoDriver) Check() (*CheckResult, error) {
 	if err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = fmt.Sprintf("Trino check failed: %v", err)
 		return result, nil
 	}
 
 	defer resp.Body.Close()
+	result.StatusCode = resp.StatusCode
 
 	if resp.StatusCode != 200 {
 		result.Success = false
@@ -71,6 +73,7 @@ func (t *TrinoDriver) Check() (*CheckResult, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&trinoInfo); err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = fmt.Sprintf("Trino check failed to parse response: %v", err)
 		return result, nil
 	}

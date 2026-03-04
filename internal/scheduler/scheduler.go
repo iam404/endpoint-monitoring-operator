@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"sort"
 	"sync"
 	"time"
 
@@ -243,7 +244,25 @@ func (s *Scheduler) runJob(ctx context.Context, workerID int, job ProbeJob) {
 
 	checkResult, err := job.Driver.Check()
 	if err != nil {
-		checkResult = &driver.CheckResult{Success: false, Error: err, Message: err.Error()}
+		checkResult = &driver.CheckResult{Success: false, Error: err, ErrorMessage: err.Error(), Message: err.Error()}
+	}
+	if checkResult == nil {
+		checkResult = &driver.CheckResult{Success: false, ErrorMessage: "driver returned no result", Message: "driver returned no result"}
+	}
+
+	probeResult := ProbeResult{
+		Success:      checkResult.Success,
+		Latency:      checkResult.ResponseTime,
+		StatusCode:   checkResult.StatusCode,
+		ErrorMessage: checkResult.ErrorMessage,
+		CheckedAt:    metav1.Now(),
+	}
+	if probeResult.ErrorMessage == "" && checkResult.Error != nil {
+		probeResult.ErrorMessage = checkResult.Error.Error()
+	}
+
+	if err := job.Status.Write(ctx, job.Key, probeResult); err != nil {
+		logger.Error(err, "failed to write probe status")
 	}
 
 	status := "failure"
@@ -255,19 +274,11 @@ func (s *Scheduler) runJob(ctx context.Context, workerID int, job ProbeJob) {
 	if notifyErr := job.Notifier.SendAlert(status, message); notifyErr != nil {
 		logger.Error(notifyErr, "failed to notify")
 	}
-
-	probeResult := ProbeResult{Success: checkResult.Success, Latency: checkResult.ResponseTime, CheckedAt: metav1.Now()}
-	if checkResult.Error != nil {
-		probeResult.ErrorMessage = checkResult.Error.Error()
-	}
-
-	if err := job.Status.Write(ctx, job.Key, probeResult); err != nil {
-		logger.Error(err, "failed to write probe status")
-	}
 }
 
 func hashSpec(spec monitoringv1alpha1.EndpointMonitorSpec) (uint64, error) {
-	b, err := json.Marshal(spec)
+	normalized := normalizeSpecForHash(spec)
+	b, err := json.Marshal(normalized)
 	if err != nil {
 		return 0, err
 	}
@@ -276,4 +287,50 @@ func hashSpec(spec monitoringv1alpha1.EndpointMonitorSpec) (uint64, error) {
 		return 0, err
 	}
 	return h.Sum64(), nil
+}
+
+type hashSpecModel struct {
+	Driver        string            `json:"driver"`
+	Endpoint      string            `json:"endpoint"`
+	CheckInterval int               `json:"checkInterval"`
+	Notify        any               `json:"notify"`
+	HTTPJSON      *hashHTTPJSONSpec `json:"httpJsonCheck,omitempty"`
+}
+
+type hashHTTPJSONSpec struct {
+	ExpectedStatusCode int                 `json:"expectedStatusCode,omitempty"`
+	JsonAssertions     []hashAssertionItem `json:"jsonAssertions"`
+}
+
+type hashAssertionItem struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+func normalizeSpecForHash(spec monitoringv1alpha1.EndpointMonitorSpec) hashSpecModel {
+	normalized := hashSpecModel{
+		Driver:        spec.Driver,
+		Endpoint:      spec.Endpoint,
+		CheckInterval: spec.CheckInterval,
+		Notify:        spec.Notify,
+	}
+
+	if spec.HttpJsonCheck == nil {
+		return normalized
+	}
+
+	assertions := make([]hashAssertionItem, 0, len(spec.HttpJsonCheck.JsonAssertions))
+	for k, v := range spec.HttpJsonCheck.JsonAssertions {
+		assertions = append(assertions, hashAssertionItem{Key: k, Value: v})
+	}
+	sort.Slice(assertions, func(i, j int) bool {
+		return assertions[i].Key < assertions[j].Key
+	})
+
+	normalized.HTTPJSON = &hashHTTPJSONSpec{
+		ExpectedStatusCode: spec.HttpJsonCheck.ExpectedStatusCode,
+		JsonAssertions:     assertions,
+	}
+
+	return normalized
 }

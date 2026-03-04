@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"context"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ type countingDriver struct {
 func (d *countingDriver) Check() (*driver.CheckResult, error) {
 	v, _ := d.counts.LoadOrStore(d.key, int64(0))
 	d.counts.Store(d.key, v.(int64)+1)
-	return &driver.CheckResult{Success: true, ResponseTime: 10 * time.Millisecond, Message: "ok"}, nil
+	return &driver.CheckResult{Success: true, ResponseTime: 10 * time.Millisecond, StatusCode: 200, Message: "ok"}, nil
 }
 func (d *countingDriver) GetEndpoint() string { return d.key }
 func (d *countingDriver) GetType() string     { return "mock" }
@@ -76,17 +77,27 @@ func TestSchedulerRunsThreeProbesOnFakeClock(t *testing.T) {
 	}
 
 	fakeClock.Step(2 * time.Second)
-	time.Sleep(20 * time.Millisecond)
 	fakeClock.Step(2 * time.Second)
-	time.Sleep(20 * time.Millisecond)
 
-	for _, endpoint := range []string{"a", "b", "c"} {
-		v, ok := counts.Load(endpoint)
-		if !ok {
-			t.Fatalf("expected endpoint %s to be called", endpoint)
+	waitFor(t, 2*time.Second, func() bool {
+		for _, endpoint := range []string{"a", "b", "c"} {
+			v, ok := counts.Load(endpoint)
+			if !ok || v.(int64) < 2 {
+				return false
+			}
 		}
-		if v.(int64) < 2 {
-			t.Fatalf("expected endpoint %s to be called at least 2 times, got %d", endpoint, v.(int64))
+		return true
+	})
+}
+
+func waitFor(t *testing.T, timeout time.Duration, fn func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		if fn() {
+			return
 		}
+		runtime.Gosched()
 	}
+	t.Fatalf("condition was not met before timeout %s", timeout)
 }

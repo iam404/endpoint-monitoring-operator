@@ -37,11 +37,13 @@ func (h *HTTPDriver) Check() (*CheckResult, error) {
 	if err != nil {
 		result.Success = false
 		result.Error = err
+		result.ErrorMessage = err.Error()
 		result.Message = fmt.Sprintf("HTTP check failed: %v", err)
 		return result, nil
 	}
 
 	defer resp.Body.Close()
+	result.StatusCode = resp.StatusCode
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		result.Success = true

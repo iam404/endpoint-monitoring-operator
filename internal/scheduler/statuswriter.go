@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -42,5 +43,12 @@ func (w *EndpointMonitorStatusWriter) Write(ctx context.Context, key types.Names
 	obj := &monitoringv1alpha1.EndpointMonitor{}
 	obj.Name = key.Name
 	obj.Namespace = key.Namespace
-	return w.client.Status().Patch(ctx, obj, client.RawPatch(types.MergePatchType, patch))
+	if err := w.client.Status().Patch(ctx, obj, client.RawPatch(types.MergePatchType, patch)); err != nil {
+		if apierrors.IsNotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	return nil
 }
