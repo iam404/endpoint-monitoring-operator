@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	"github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
 )
 
 type alertPayload struct {

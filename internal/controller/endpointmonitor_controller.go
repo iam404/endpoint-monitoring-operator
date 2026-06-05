@@ -12,8 +12,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	monitorv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
-	"github.com/LiciousTech/endpoint-monitoring-operator/pkg/factory"
+	monitorv1alpha1 "github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
+	"github.com/iam404/endpoint-monitoring-operator/pkg/factory"
 )
 
 type EndpointMonitorReconciler struct {

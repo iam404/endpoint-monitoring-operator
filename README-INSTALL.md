@@ -3,7 +3,7 @@
 You can install the endpoint-monitoring-operator into your Kubernetes cluster with a single command :
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/LiciousTech/endpoint-monitoring-operator/main/dist/install.yaml
+kubectl apply -f https://raw.githubusercontent.com/iam404/endpoint-monitoring-operator/main/dist/install.yaml
 ```
 
 This manifest sets up everything needed.

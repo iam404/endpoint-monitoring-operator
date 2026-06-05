@@ -32,7 +32,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	syntheticmonitoringv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	syntheticmonitoringv1alpha1 "github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 

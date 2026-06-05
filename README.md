@@ -3,7 +3,7 @@
 > A lightweight, extensible Kubernetes Operator that probes *any* endpoint—HTTP/JSON, TCP, DNS, ICMP, Trino, OpenSearch, and more—and routes alerts to Slack or e-mail with a simple Custom Resource.  
 
 ![Go](https://img.shields.io/badge/Go-%3E%3D1.23-blue?logo=go)
-![License](https://img.shields.io/github/license/LiciousTech/endpoint-monitoring-operator)
+![License](https://img.shields.io/github/license/iam404/endpoint-monitoring-operator)
 
 ---
 
@@ -73,7 +73,7 @@ See the Go type definitions for the full schema.
 
 ## Installation (one-liner)
 
-```kubectl apply -f https://raw.githubusercontent.com/LiciousTech/endpoint-monitoring-operator/main/dist/install.yaml```
+```kubectl apply -f https://raw.githubusercontent.com/iam404/endpoint-monitoring-operator/main/dist/install.yaml```
 
 ### Quick-start examples
 
