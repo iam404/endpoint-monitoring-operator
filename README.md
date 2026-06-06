@@ -22,7 +22,7 @@ Traditional uptime checkers only tell you if a port is open. **Endpoint-Monitori
 
 | Driver        | Typical use-case                                   |
 |---------------|----------------------------------------------------|
-| `http`        | Basic status-code check (200/302/…​)               |
+| `http`        | Basic status-code check (200/302/…​)                |
 | `http-json`   | Validate JSON payload & status code                |
 | `tcp`         | Verify a service is listening on a port            |
 | `dns`         | Ensure a domain resolves to expected IP(s)         |
@@ -61,7 +61,7 @@ spec:
 
 Key fields in the spec (abridged):
 
-```
+```console
 driver – which probe implementation to use
 endpoint – URL/host/cluster depending on driver
 checkInterval – seconds between probes
@@ -78,34 +78,29 @@ See the Go type definitions for the full schema.
 ### Quick-start examples
 
 #### 1. Monitor DNS resolution
+
 ```kubectl apply -f examples/dns.yaml```
 
 #### 2. Deep health-check on a JSON endpoint
-```kubectl apply -f examples/http-json.yaml```
 
+```kubectl apply -f examples/http-json.yaml```
 
 ## Roadmap
 
-* 🔌 Additional notifiers: PagerDuty, OpsGenie, Webhook
-* 🗄️ Persistent metrics export (Prometheus CRD)
-* 🕵🏻‍♂️ Synthetic transaction scripts (e.g., login + checkout)
-* 🔑 Secretless credentials via CSI Drivers
-* ➕ **New drivers:** Redis, MySQL, Kafka
+* Additional notifiers: PagerDuty, OpsGenie, Webhook
+* Persistent metrics export (Prometheus CRD)
+* Synthetic transaction scripts (e.g., login + checkout)
+* Secretless credentials via CSI Drivers
+* **New drivers:** Redis, MySQL, Kafka
 
 Feel free to open an Issue or Pull Request!
 
 ## Contributing
+
 1. Fork & clone the repo
 2. Create a feature branch
 3. Run make test and golangci-lint run
 
 Submit a PR—all contributions welcome!
+
 See CONTRIBUTING.md for details.
-
-
-
-
-
-
-
-
