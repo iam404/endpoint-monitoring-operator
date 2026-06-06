@@ -8,7 +8,7 @@ kubectl apply -f https://raw.githubusercontent.com/iam404/endpoint-monitoring-op
 
 This manifest sets up everything needed.
 
-# Example usage
+## Example usage
 
 You can also refer examples folder in this repo.
 
@@ -36,7 +36,6 @@ spec:
 ```
 
 Apply above manifest.
-
 
 Check status:
 
@@ -144,6 +143,7 @@ spec:
 ```
 
 ## 5. OpenSearch
+
 If you want to ensure your OpenSearch cluster is healthy (i.e., in green or yellow state), you can use the opensearch driver.
 
 ```yaml
