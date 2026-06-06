@@ -9,7 +9,6 @@ This is a Kubernetes operator that lets you declaratively monitor external servi
 
 It follows the Factory Design Pattern to easily support new drivers (monitoring mechanisms) and notifiers (e.g., Slack, email, etc.).
 
-
 ## Project Structure
 
 ```csharp
@@ -23,7 +22,6 @@ pkg/
 controllers/              # Core reconciliation logic
 dist/                     # install.yaml and release manifests
 ```
-
 
 ## Add a New Driver
 
@@ -61,7 +59,6 @@ Add the config struct in `api/v1alpha1/endpointmonitor_types.go`
 
 Add support in NewNotifier() in `pkg/factory/factory.go`
 
-
 ## Code Style
 
 1. Use idiomatic Go formatting (go fmt)
@@ -72,7 +69,6 @@ Add support in NewNotifier() in `pkg/factory/factory.go`
 
 4. No hardcoded secrets/tokens; use Kubernetes SecretRef
 
-
 ## Security & Secrets
 
 Run Trivy to scan for secrets in the image:
@@ -82,11 +78,11 @@ trivy image --scanners secret <your-image>
 ```
 
 ## Pull Requests
+
 Always create a feature branch (e.g., feat/kafka-driver)
 
 Write clear PR titles and descriptions
 
 Link to relevant issues if applicable
 
-Follow conventional commit standards - https://www.conventionalcommits.org/en/v1.0.0/
-
+Follow conventional commit standards - <https://www.conventionalcommits.org/en/v1.0.0/>
