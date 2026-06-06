@@ -27,7 +27,7 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	Endpointmonitoringv1alpha1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	Endpointmonitoringv1alpha1 "github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
 )
 
 var _ = Describe("EndpointMonitor Controller", func() {

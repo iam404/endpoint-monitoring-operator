@@ -3,8 +3,8 @@ package email
 import (
 	"fmt"
 
-	"github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
-	"github.com/LiciousTech/endpoint-monitoring-operator/internal/notifier"
+	"github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
+	"github.com/iam404/endpoint-monitoring-operator/internal/notifier"
 )
 
 type EmailNotifier struct {

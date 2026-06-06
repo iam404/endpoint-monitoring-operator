@@ -1,4 +1,4 @@
-module github.com/LiciousTech/endpoint-monitoring-operator
+module github.com/iam404/endpoint-monitoring-operator
 
 go 1.23.0
 

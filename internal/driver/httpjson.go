@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	v1 "github.com/LiciousTech/endpoint-monitoring-operator/api/v1alpha1"
+	v1 "github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
 )
 
 type HTTPJSONDriver struct {

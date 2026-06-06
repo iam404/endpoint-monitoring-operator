@@ -27,7 +27,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/LiciousTech/endpoint-monitoring-operator/test/utils"
+	"github.com/iam404/endpoint-monitoring-operator/test/utils"
 )
 
 // namespace where the project is deployed in
