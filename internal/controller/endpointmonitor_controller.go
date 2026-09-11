@@ -13,18 +13,26 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	monitorv1alpha1 "github.com/iam404/endpoint-monitoring-operator/api/v1alpha1"
+	"github.com/iam404/endpoint-monitoring-operator/internal/driver"
+	"github.com/iam404/endpoint-monitoring-operator/internal/notifier"
 	"github.com/iam404/endpoint-monitoring-operator/pkg/factory"
 )
 
 type EndpointMonitorReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+
+	// newDriver and newNotifier are seams that default to the real factory
+	// implementations. Tests may override them to inject fakes without
+	// performing real network calls.
+	newDriver   func(driverType string, endpoint string, monitor *monitorv1alpha1.EndpointMonitor) (driver.Driver, error)
+	newNotifier func(config *monitorv1alpha1.NotifyConfig) (notifier.Notifier, error)
 }
 
 func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	logger.Info("Reconcile triggered",
+	logger.Info("Reconcile triggered - info",
 		"name", req.Name,
 		"namespace", req.Namespace,
 		"timestamp", time.Now().Format(time.RFC3339))
@@ -53,13 +61,22 @@ func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		return ctrl.Result{RequeueAfter: requeueAfter}, nil
 	}
 
-	driver, err := factory.NewDriver(monitor.Spec.Driver, monitor.Spec.Endpoint, &monitor)
+	newDriver := r.newDriver
+	if newDriver == nil {
+		newDriver = factory.NewDriver
+	}
+	newNotifier := r.newNotifier
+	if newNotifier == nil {
+		newNotifier = factory.NewNotifier
+	}
+
+	driver, err := newDriver(monitor.Spec.Driver, monitor.Spec.Endpoint, &monitor)
 	if err != nil {
 		logger.Error(err, "Failed to create driver")
 		return ctrl.Result{}, err
 	}
 
-	notifier, err := factory.NewNotifier(&monitor.Spec.Notify)
+	notifier, err := newNotifier(&monitor.Spec.Notify)
 	if err != nil {
 		logger.Error(err, "Failed to create notifier")
 		return ctrl.Result{}, err
