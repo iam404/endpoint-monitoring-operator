@@ -32,7 +32,7 @@ type EndpointMonitorReconciler struct {
 func (r *EndpointMonitorReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
-	logger.Info("Reconcile triggered",
+	logger.Info("Reconcile triggered - info",
 		"name", req.Name,
 		"namespace", req.Namespace,
 		"timestamp", time.Now().Format(time.RFC3339))
